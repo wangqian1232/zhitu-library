@@ -1,0 +1,2313 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智图图书馆 - 管理员面板</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f5f5;
+      }
+
+      .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #7c4dff, #536dfe);
+      }
+      .login-box {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        width: 400px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+      .login-box h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 8px;
+      }
+      .login-box p {
+        text-align: center;
+        color: #999;
+        margin-bottom: 30px;
+      }
+      .login-box input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        margin-bottom: 16px;
+        outline: none;
+        transition: border-color 0.3s;
+      }
+      .login-box input:focus {
+        border-color: #7c4dff;
+      }
+      .login-box button {
+        width: 100%;
+        padding: 14px;
+        background: #7c4dff;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      .login-box button:hover {
+        background: #6a3de8;
+      }
+      .login-error {
+        color: #f44336;
+        text-align: center;
+        margin-bottom: 16px;
+        display: none;
+      }
+
+      .admin-layout {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 240px;
+        background: white;
+        border-right: 1px solid #e8e8e8;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 100;
+      }
+      .sidebar-header {
+        padding: 24px 20px;
+        background: linear-gradient(135deg, #7c4dff, #536dfe);
+        color: white;
+      }
+      .sidebar-header .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 12px;
+      }
+      .sidebar-header .username {
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .sidebar-header .role {
+        font-size: 12px;
+        opacity: 0.8;
+        margin-top: 4px;
+      }
+      .sidebar-nav {
+        padding: 12px 0;
+      }
+      .sidebar-nav .nav-item {
+        padding: 12px 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #666;
+        transition: all 0.2s;
+        font-size: 14px;
+      }
+      .sidebar-nav .nav-item:hover {
+        background: #f5f0ff;
+        color: #7c4dff;
+      }
+      .sidebar-nav .nav-item.active {
+        background: #f5f0ff;
+        color: #7c4dff;
+        font-weight: 600;
+        border-right: 3px solid #7c4dff;
+      }
+      .sidebar-nav .nav-item svg {
+        width: 20px;
+        height: 20px;
+      }
+      .sidebar-logout {
+        padding: 16px 20px;
+        border-top: 1px solid #e8e8e8;
+      }
+      .sidebar-logout button {
+        width: 100%;
+        padding: 10px;
+        background: none;
+        border: 1px solid #f44336;
+        color: #f44336;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+      .sidebar-logout button:hover {
+        background: #f44336;
+        color: white;
+      }
+
+      .main-content {
+        flex: 1;
+        margin-left: 240px;
+      }
+      .top-bar {
+        background: white;
+        padding: 16px 24px;
+        border-bottom: 1px solid #e8e8e8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .top-bar h2 {
+        font-size: 18px;
+        color: #333;
+      }
+      .top-bar .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .top-bar .user-info span {
+        font-size: 14px;
+        color: #666;
+      }
+
+      .page-content {
+        padding: 24px;
+      }
+      .page-content.hidden {
+        display: none;
+      }
+
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+      .stat-card {
+        background: white;
+        border-radius: 14px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      .stat-card .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+      }
+      .stat-card .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+      }
+      .stat-card .stat-label {
+        font-size: 13px;
+        color: #999;
+        margin-top: 4px;
+      }
+
+      .card {
+        background: white;
+        border-radius: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        margin-bottom: 20px;
+      }
+      .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .card-header h3 {
+        font-size: 16px;
+        color: #333;
+      }
+      .card-body {
+        padding: 20px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-primary {
+        background: #7c4dff;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #6a3de8;
+      }
+      .btn-success {
+        background: #4caf50;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #43a047;
+      }
+      .btn-danger {
+        background: #f44336;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #e53935;
+      }
+      .btn-warning {
+        background: #ff9800;
+        color: white;
+      }
+      .btn-warning:hover {
+        background: #f57c00;
+      }
+      .btn-sm {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      .btn-outline {
+        background: none;
+        border: 1px solid #e0e0e0;
+        color: #666;
+      }
+      .btn-outline:hover {
+        border-color: #7c4dff;
+        color: #7c4dff;
+      }
+
+      .search-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .search-bar input {
+        flex: 1;
+        padding: 10px 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 14px;
+        outline: none;
+      }
+      .search-bar input:focus {
+        border-color: #7c4dff;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      table th,
+      table td {
+        padding: 12px 16px;
+        text-align: left;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 14px;
+      }
+      table th {
+        background: #fafafa;
+        color: #666;
+        font-weight: 600;
+        font-size: 13px;
+      }
+      table tr:hover {
+        background: #fafafa;
+      }
+      table td {
+        color: #333;
+      }
+
+      .badge {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .badge-success {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .badge-danger {
+        background: #ffebee;
+        color: #c62828;
+      }
+      .badge-warning {
+        background: #fff3e0;
+        color: #e65100;
+      }
+      .badge-info {
+        background: #e3f2fd;
+        color: #1565c0;
+      }
+      .badge-purple {
+        background: #f3e5f5;
+        color: #7b1fa2;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal-overlay.show {
+        display: flex;
+      }
+      .modal {
+        background: white;
+        border-radius: 16px;
+        width: 500px;
+        max-width: 90vw;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+      .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-header h3 {
+        font-size: 16px;
+      }
+      .modal-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #999;
+      }
+      .modal-body {
+        padding: 24px;
+      }
+      .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+      }
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        border-color: #7c4dff;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid #f0f0f0;
+        margin-bottom: 20px;
+      }
+      .tab {
+        padding: 12px 20px;
+        cursor: pointer;
+        font-size: 14px;
+        color: #666;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+      }
+      .tab:hover {
+        color: #7c4dff;
+      }
+      .tab.active {
+        color: #7c4dff;
+        border-bottom-color: #7c4dff;
+        font-weight: 600;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .filter-row select,
+      .filter-row input {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 13px;
+        outline: none;
+      }
+
+      .chart-container {
+        height: 300px;
+        position: relative;
+      }
+      #categoryChart {
+        max-height: 400px;
+        overflow-y: auto;
+        padding-right: 10px;
+      }
+      #categoryChart::-webkit-scrollbar {
+        width: 6px;
+      }
+      #categoryChart::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+      }
+      #categoryChart::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+      }
+      #categoryChart::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+      }
+      .health-score {
+        font-size: 36px;
+        font-weight: 700;
+        text-align: center;
+        padding: 20px;
+      }
+      .health-score.good {
+        color: #4caf50;
+      }
+      .health-score.warning {
+        color: #ff9800;
+      }
+      .health-score.danger {
+        color: #f44336;
+      }
+
+      .exception-card {
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-left: 4px solid #e0e0e0;
+        display: flex;
+        gap: 12px;
+      }
+      .exception-card.selected {
+        background: #f0f7ff;
+        border-left-color: #2196f3;
+      }
+      .exception-card.high {
+        border-left-color: #f44336;
+      }
+      .exception-card.medium {
+        border-left-color: #ff9800;
+      }
+      .exception-card.low {
+        border-left-color: #4caf50;
+      }
+      .exception-card .exc-checkbox {
+        padding-top: 4px;
+      }
+      .exception-card .exc-content {
+        flex: 1;
+      }
+      .exception-card .exc-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+      }
+      .exception-card .exc-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+      }
+      .exception-card .exc-desc {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 8px;
+      }
+      .exception-card .exc-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 12px;
+        color: #999;
+      }
+      .exception-card .exc-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .setting-item:last-child {
+        border-bottom: none;
+      }
+      .setting-item .setting-label {
+        font-size: 14px;
+        color: #333;
+      }
+      .setting-item .setting-desc {
+        font-size: 12px;
+        color: #999;
+        margin-top: 4px;
+      }
+      .setting-item input {
+        width: 100px;
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .batch-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        background: #f5f5f5;
+        border-radius: 8px;
+      }
+
+      .filter-row {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .filter-row input[type="date"] {
+        padding: 8px 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+      .empty-state svg {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 16px;
+        opacity: 0.3;
+      }
+
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 10px;
+        color: white;
+        font-size: 14px;
+        z-index: 2000;
+        transform: translateX(120%);
+        transition: transform 0.3s;
+      }
+      .toast.show {
+        transform: translateX(0);
+      }
+      .toast.success {
+        background: #4caf50;
+      }
+      .toast.error {
+        background: #f44336;
+      }
+      .toast.info {
+        background: #2196f3;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+      }
+      .pagination button {
+        padding: 8px 14px;
+        border: 1px solid #e0e0e0;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .pagination button.active {
+        background: #7c4dff;
+        color: white;
+        border-color: #7c4dff;
+      }
+      .pagination button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 60px;
+        }
+        .sidebar-header .username,
+        .sidebar-header .role,
+        .sidebar-nav .nav-item span,
+        .sidebar-logout {
+          display: none;
+        }
+        .sidebar-nav .nav-item {
+          justify-content: center;
+          padding: 14px;
+        }
+        .main-content {
+          margin-left: 60px;
+        }
+        .stats-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loginPage" class="login-container">
+      <div class="login-box">
+        <h1>管理员登录</h1>
+        <p>智图图书馆管理系统</p>
+        <div id="loginError" class="login-error">用户名或密码错误</div>
+        <input
+          type="text"
+          id="loginUsername"
+          placeholder="用户名"
+          value="admin"
+        />
+        <input
+          type="password"
+          id="loginPassword"
+          placeholder="密码"
+          value="admin123"
+        />
+        <button onclick="handleLogin()">登 录</button>
+      </div>
+    </div>
+
+    <div id="adminPage" style="display: none">
+      <div class="admin-layout">
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <div class="avatar">&#128100;</div>
+            <div class="username" id="sidebarUsername">管理员</div>
+            <div class="role">系统管理员</div>
+          </div>
+          <nav class="sidebar-nav">
+            <div
+              class="nav-item active"
+              onclick="switchPage('dashboard', this)"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+              <span>数据概览</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('books', this)">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path
+                  d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                />
+              </svg>
+              <span>图书管理</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('users', this)">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+              <span>用户管理</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('exceptions', this)">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span>异常处理中心</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('settings', this)">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
+              <span>系统设置</span>
+            </div>
+            <div class="nav-item" onclick="switchPage('review', this)">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M9 11l3 3L22 4" />
+                <path
+                  d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+                />
+              </svg>
+              <span>内容审核</span>
+            </div>
+            <div class="nav-item" onclick="openDataScreen()">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              <span>数据大屏</span>
+            </div>
+          </nav>
+          <div class="sidebar-logout">
+            <button onclick="handleLogout()">退出登录</button>
+          </div>
+        </aside>
+
+        <main class="main-content">
+          <div class="top-bar">
+            <h2 id="pageTitle">数据概览</h2>
+            <div class="user-info">
+              <span id="topBarUser">管理员</span>
+            </div>
+          </div>
+
+          <div id="page-dashboard" class="page-content">
+            <div class="stats-row" id="dashboardStats"></div>
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px"
+            >
+              <div class="card">
+                <div class="card-header"><h3>借阅趋势（近7天）</h3></div>
+                <div class="card-body">
+                  <div id="borrowChart" class="chart-container"></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>图书分类统计</h3></div>
+                <div class="card-body">
+                  <div id="categoryChart" class="chart-container"></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>最近借阅记录</h3></div>
+              <div class="card-body">
+                <div id="recentBorrows">
+                  <div class="loading">加载中...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="page-books" class="page-content hidden">
+            <div class="stats-row" id="bookStats"></div>
+            <div class="search-bar">
+              <input
+                type="text"
+                id="bookSearch"
+                placeholder="搜索书名、作者..."
+                onkeyup="if (event.key === 'Enter') loadBooks();"
+              />
+              <button class="btn btn-primary" onclick="loadBooks()">
+                搜索
+              </button>
+              <button class="btn btn-primary" onclick="showAddBookModal()">
+                + 新增图书
+              </button>
+            </div>
+            <div class="card">
+              <div class="card-body" style="padding: 0">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>书名</th>
+                      <th>作者</th>
+                      <th>分类</th>
+                      <th>库存</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bookTableBody">
+                    <tr>
+                      <td colspan="6" class="loading">加载中...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="page-users" class="page-content hidden">
+            <div class="stats-row" id="userStats"></div>
+            <div class="search-bar">
+              <input
+                type="text"
+                id="userSearch"
+                placeholder="搜索用户名、学号..."
+                onkeyup="if (event.key === 'Enter') loadUsers();"
+              />
+              <button class="btn btn-primary" onclick="loadUsers()">
+                搜索
+              </button>
+            </div>
+            <div class="card">
+              <div class="card-body" style="padding: 0">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>用户名</th>
+                      <th>学号</th>
+                      <th>邮箱</th>
+                      <th>手机号</th>
+                      <th>角色</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userTableBody">
+                    <tr>
+                      <td colspan="6" class="loading">加载中...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div id="page-exceptions" class="page-content hidden">
+            <div class="stats-row" id="exceptionStats"></div>
+            <div class="tabs" id="exceptionTabs">
+              <div class="tab active" onclick="filterExceptions('all', this)">
+                全部
+              </div>
+              <div class="tab" onclick="filterExceptions('pending', this)">
+                待处理
+              </div>
+              <div class="tab" onclick="filterExceptions('processing', this)">
+                处理中
+              </div>
+              <div class="tab" onclick="filterExceptions('resolved', this)">
+                已解决
+              </div>
+              <div class="tab" onclick="filterExceptions('ignored', this)">
+                已忽略
+              </div>
+            </div>
+            <div class="filter-row">
+              <select id="exceptionTypeFilter" onchange="loadExceptions()">
+                <option value="">全部类型</option>
+                <option value="overdue">借阅逾期</option>
+                <option value="no_show">预约未到</option>
+                <option value="system_error">系统错误</option>
+                <option value="api_error">接口错误</option>
+              </select>
+              <input
+                type="date"
+                id="exceptionStartDate"
+                onchange="loadExceptions()"
+              />
+              <input
+                type="date"
+                id="exceptionEndDate"
+                onchange="loadExceptions()"
+              />
+            </div>
+            <div
+              class="batch-actions"
+              id="batchActions"
+              style="display: none; margin-bottom: 16px"
+            >
+              <span id="selectedCount">已选择 0 项</span>
+              <button
+                class="btn btn-sm btn-warning"
+                onclick="batchUpdateExceptionStatus('processing')"
+              >
+                批量处理
+              </button>
+              <button
+                class="btn btn-sm btn-success"
+                onclick="batchUpdateExceptionStatus('resolved')"
+              >
+                批量解决
+              </button>
+              <button
+                class="btn btn-sm btn-outline"
+                onclick="batchUpdateExceptionStatus('ignored')"
+              >
+                批量忽略
+              </button>
+              <button
+                class="btn btn-sm btn-danger"
+                onclick="batchDeleteExceptions()"
+              >
+                批量删除
+              </button>
+              <button
+                class="btn btn-sm btn-outline"
+                onclick="clearExceptionSelection()"
+              >
+                取消选择
+              </button>
+            </div>
+            <div id="exceptionList"></div>
+          </div>
+
+          <div id="page-settings" class="page-content hidden">
+            <div class="card">
+              <div class="card-header"><h3>借阅规则设置</h3></div>
+              <div class="card-body" id="borrowSettings"></div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>系统参数</h3></div>
+              <div class="card-body" id="systemSettings"></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <h3>数据管理</h3>
+              </div>
+              <div class="card-body">
+                <div class="setting-item">
+                  <div>
+                    <div class="setting-label">数据备份</div>
+                    <div class="setting-desc">导出当前系统所有数据</div>
+                  </div>
+                  <button class="btn btn-primary" onclick="exportData()">
+                    导出数据
+                  </button>
+                </div>
+                <div class="setting-item">
+                  <div>
+                    <div class="setting-label">初始化数据</div>
+                    <div class="setting-desc">
+                      重新初始化测试数据（会清除现有数据）
+                    </div>
+                  </div>
+                  <button class="btn btn-danger" onclick="initData()">
+                    初始化数据
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>系统日志</h3></div>
+              <div class="card-body" id="systemLogs">
+                <div class="loading">加载中...</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="page-review" class="page-content hidden">
+            <div class="stats-row" id="reviewStats"></div>
+            <div class="tabs" id="reviewTabs">
+              <div class="tab active" onclick="filterSharedBooks('all', this)">
+                全部
+              </div>
+              <div class="tab" onclick="filterSharedBooks('pending', this)">
+                待审核
+              </div>
+              <div class="tab" onclick="filterSharedBooks('approved', this)">
+                已通过
+              </div>
+              <div class="tab" onclick="filterSharedBooks('rejected', this)">
+                已拒绝
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-body" style="padding: 0">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>书名</th>
+                      <th>作者</th>
+                      <th>共享者</th>
+                      <th>共享方式</th>
+                      <th>新旧程度</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reviewTableBody">
+                    <tr>
+                      <td colspan="7" class="loading">加载中...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="modalTitle">标题</h3>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer" id="modalFooter"></div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const API_BASE = "http://localhost:8080/api";
+      let currentUser = null;
+      let currentExceptionFilter = "all";
+      let currentReviewFilter = "all";
+      let selectedExceptions = new Set();
+
+      function showToast(message, type = "info") {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.className = "toast " + type;
+        setTimeout(() => toast.classList.add("show"), 10);
+        setTimeout(() => toast.classList.remove("show"), 3000);
+      }
+
+      async function apiCall(url, options = {}) {
+        try {
+          const response = await fetch(API_BASE + url, {
+            headers: { "Content-Type": "application/json", ...options.headers },
+            ...options,
+          });
+          if (!response.ok) {
+            if (response.status === 404) {
+              return null;
+            }
+            return {
+              success: false,
+              message: "请求失败",
+              status: response.status,
+            };
+          }
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            return await response.json();
+          }
+          return null;
+        } catch (e) {
+          console.error("API Error:", e);
+          return { success: false, message: "网络请求失败" };
+        }
+      }
+
+      async function handleLogin() {
+        const username = document.getElementById("loginUsername").value;
+        const password = document.getElementById("loginPassword").value;
+        const result = await apiCall("/users/login", {
+          method: "POST",
+          body: JSON.stringify({ username, password }),
+        });
+        if (result.success && result.user && result.user.role === "admin") {
+          currentUser = result.user;
+          document.getElementById("loginPage").style.display = "none";
+          document.getElementById("adminPage").style.display = "block";
+          document.getElementById("sidebarUsername").textContent =
+            currentUser.username;
+          document.getElementById("topBarUser").textContent =
+            currentUser.username;
+          loadDashboard();
+        } else {
+          document.getElementById("loginError").style.display = "block";
+          setTimeout(
+            () =>
+              (document.getElementById("loginError").style.display = "none"),
+            3000,
+          );
+        }
+      }
+
+      function openDataScreen() {
+        window.open("screen.html", "_blank");
+      }
+
+      function handleLogout() {
+        currentUser = null;
+        document.getElementById("loginPage").style.display = "flex";
+        document.getElementById("adminPage").style.display = "none";
+      }
+
+      function switchPage(page, el) {
+        document
+          .querySelectorAll(".page-content")
+          .forEach((p) => p.classList.add("hidden"));
+        document.getElementById("page-" + page).classList.remove("hidden");
+        document
+          .querySelectorAll(".nav-item")
+          .forEach((n) => n.classList.remove("active"));
+        if (el) el.classList.add("active");
+        const titles = {
+          dashboard: "数据概览",
+          books: "图书管理",
+          users: "用户管理",
+          exceptions: "异常处理中心",
+          settings: "系统设置",
+          review: "内容审核",
+        };
+        document.getElementById("pageTitle").textContent = titles[page] || "";
+        if (page === "dashboard") loadDashboard();
+        else if (page === "books") loadBooks();
+        else if (page === "users") loadUsers();
+        else if (page === "exceptions") loadExceptions();
+        else if (page === "settings") {
+          loadSettings();
+          loadSystemLogs();
+        } else if (page === "review") loadSharedBooksForReview();
+      }
+
+      async function loadDashboard() {
+        const books = await apiCall("/books");
+        const users = await apiCall("/users");
+        const exceptions = await apiCall("/exceptions");
+        const sharedBooks = await apiCall("/shared-books");
+        const bookData = Array.isArray(books) ? books : books.data || [];
+        const userData = Array.isArray(users)
+          ? users
+          : users.value || users.data || [];
+        const excData = Array.isArray(exceptions)
+          ? exceptions
+          : exceptions.data || [];
+        const sharedBookData = Array.isArray(sharedBooks)
+          ? sharedBooks
+          : sharedBooks.data || sharedBooks || [];
+
+        const availableCount = bookData.filter(
+          (b) => b.availableCopies > 0,
+        ).length;
+        const borrowedCount = bookData.length - availableCount;
+        const pendingReview = sharedBookData.filter(
+          (b) => b.status === "pending",
+        ).length;
+
+        document.getElementById("dashboardStats").innerHTML = `
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#f3e5f5;color:#7C4DFF;">&#128218;</div>
+            <div class="stat-value">${bookData.length}</div>
+            <div class="stat-label">图书总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f5e9;color:#4CAF50;">&#128101;</div>
+            <div class="stat-value">${userData.length}</div>
+            <div class="stat-label">用户总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#e3f2fd;color:#2196F3;">&#128203;</div>
+            <div class="stat-value">${availableCount}</div>
+            <div class="stat-label">可借图书</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fff3e0;color:#FF9800;">&#9888;</div>
+            <div class="stat-value">${pendingReview}</div>
+            <div class="stat-label">待审核共享</div>
+          </div>
+        `;
+
+        const categoryCounts = {};
+        bookData.forEach((book) => {
+          const cat = book.category || "未分类";
+          categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+        });
+
+        const categoryHtml = Object.entries(categoryCounts)
+          .map(([cat, count]) => {
+            const percentage =
+              bookData.length > 0
+                ? ((count / bookData.length) * 100).toFixed(1)
+                : 0;
+            return `
+            <div style="margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:13px;color:#333;">${cat}</span>
+                <span style="font-size:13px;color:#999;">${count}本 (${percentage}%)</span>
+              </div>
+              <div style="height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;">
+                <div style="height:100%;width:${percentage}%;background:linear-gradient(90deg,#7C4DFF,#536DFE);border-radius:4px;"></div>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+
+        document.getElementById("categoryChart").innerHTML =
+          categoryHtml || '<div class="empty-state"><p>暂无分类数据</p></div>';
+
+        const statusCounts = {
+          available: 0,
+          borrowed: 0,
+          pending: 0,
+          rejected: 0,
+        };
+        sharedBookData.forEach((book) => {
+          if (book.status === "available" || book.status === "borrowed") {
+            statusCounts[book.status]++;
+          } else if (book.status === "pending") {
+            statusCounts.pending++;
+          } else if (book.status === "rejected") {
+            statusCounts.rejected++;
+          }
+        });
+
+        const borrowChartHtml = `
+          <div style="display:flex;align-items:flex-end;height:200px;gap:20px;padding:20px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+              <div style="font-size:12px;color:#999;margin-bottom:8px;">可借阅</div>
+              <div style="width:60px;height:${availableCount > 0 ? Math.min(Math.max(availableCount * 0.8, 20), 160) : 20}px;background:linear-gradient(180deg,#4CAF50,#81C784);border-radius:4px 4px 0 0;"></div>
+              <div style="font-size:14px;font-weight:600;color:#333;margin-top:8px;">${availableCount}</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+              <div style="font-size:12px;color:#999;margin-bottom:8px;">已借出</div>
+              <div style="width:60px;height:${borrowedCount > 0 ? Math.min(Math.max(borrowedCount * 0.8, 20), 160) : 20}px;background:linear-gradient(180deg,#f44336,#E57373);border-radius:4px 4px 0 0;"></div>
+              <div style="font-size:14px;font-weight:600;color:#333;margin-top:8px;">${borrowedCount}</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+              <div style="font-size:12px;color:#999;margin-bottom:8px;">待审核</div>
+              <div style="width:60px;height:${statusCounts.pending > 0 ? Math.min(Math.max(statusCounts.pending * 0.8, 20), 160) : 20}px;background:linear-gradient(180deg,#FF9800,#FFB74D);border-radius:4px 4px 0 0;"></div>
+              <div style="font-size:14px;font-weight:600;color:#333;margin-top:8px;">${statusCounts.pending}</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+              <div style="font-size:12px;color:#999;margin-bottom:8px;">已通过</div>
+              <div style="width:60px;height:${statusCounts.available > 0 ? Math.min(Math.max(statusCounts.available * 0.8, 20), 160) : 20}px;background:linear-gradient(180deg,#2196F3,#64B5F6);border-radius:4px 4px 0 0;"></div>
+              <div style="font-size:14px;font-weight:600;color:#333;margin-top:8px;">${statusCounts.available}</div>
+            </div>
+          </div>
+        `;
+        document.getElementById("borrowChart").innerHTML = borrowChartHtml;
+
+        const recentRecords = await apiCall("/borrow/recent?limit=10");
+        const recordsData = Array.isArray(recentRecords)
+          ? recentRecords
+          : recentRecords.data || [];
+
+        if (recordsData.length === 0) {
+          document.getElementById("recentBorrows").innerHTML =
+            '<div class="empty-state"><p>暂无借阅记录</p></div>';
+          return;
+        }
+
+        const recordsHtml = recordsData
+          .map((record) => {
+            const borrowDate = new Date(record.borrowDate).toLocaleString(
+              "zh-CN",
+            );
+            const dueDate = new Date(record.dueDate).toLocaleDateString(
+              "zh-CN",
+            );
+            const statusMap = {
+              active: '<span class="badge badge-success">借阅中</span>',
+              returned: '<span class="badge badge-info">已归还</span>',
+              overdue: '<span class="badge badge-danger">已逾期</span>',
+            };
+            return `
+            <div style="display:flex;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;">
+              <div style="flex:1;">
+                <div style="font-weight:600;color:#333;">${record.bookTitle || "未知图书"}</div>
+                <div style="font-size:12px;color:#999;margin-top:4px;">借阅人: ${record.username || "-"} | 借阅时间: ${borrowDate}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px;color:#666;">应还: ${dueDate}</div>
+                <div style="margin-top:4px;">${statusMap[record.status] || record.status}</div>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+
+        document.getElementById("recentBorrows").innerHTML = recordsHtml;
+      }
+
+      async function loadBooks() {
+        const query = document.getElementById("bookSearch").value;
+        const books = await apiCall(
+          "/books" + (query ? "?title=" + encodeURIComponent(query) : ""),
+        );
+        const bookData = Array.isArray(books) ? books : books.data || [];
+        const available = bookData.filter((b) => b.availableCopies > 0).length;
+
+        document.getElementById("bookStats").innerHTML = `
+                <div class="stat-card"><div class="stat-value">${bookData.length}</div><div class="stat-label">图书总数</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:#4CAF50;">${available}</div><div class="stat-label">可借阅</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:#f44336;">${bookData.length - available}</div><div class="stat-label">已借出</div></div>
+            `;
+
+        const tbody = document.getElementById("bookTableBody");
+        if (bookData.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="empty-state">暂无图书数据</td></tr>';
+          return;
+        }
+        tbody.innerHTML = bookData
+          .map(
+            (book) => `
+                <tr>
+                    <td><strong>${book.title}</strong></td>
+                    <td>${book.author}</td>
+                    <td><span class="badge badge-purple">${book.category || "未分类"}</span></td>
+                    <td>${book.availableCopies}/${book.totalCopies}</td>
+                    <td><span class="badge ${book.availableCopies > 0 ? "badge-success" : "badge-danger"}">${book.availableCopies > 0 ? "可借阅" : "已借出"}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="showBookDetail(${book.id})">详情</button>
+                        <button class="btn btn-sm btn-warning" onclick="showEditBookModal(${book.id})">编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteBook(${book.id}, '${book.title}')">删除</button>
+                    </td>
+                </tr>
+            `,
+          )
+          .join("");
+      }
+
+      function showAddBookModal() {
+        document.getElementById("modalTitle").textContent = "新增图书";
+        document.getElementById("modalBody").innerHTML = `
+                <div class="form-group"><label>书名 *</label><input type="text" id="newBookTitle"></div>
+                <div class="form-group"><label>作者 *</label><input type="text" id="newBookAuthor"></div>
+                <div class="form-group"><label>出版社</label><input type="text" id="newBookPublisher"></div>
+                <div class="form-group"><label>ISBN</label><input type="text" id="newBookIsbn"></div>
+                <div class="form-group"><label>分类</label><input type="text" id="newBookCategory"></div>
+                <div class="form-group"><label>副本数量</label><input type="number" id="newBookCopies" value="1"></div>
+            `;
+        document.getElementById("modalFooter").innerHTML = `
+                <button class="btn btn-outline" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="addBook()">添加</button>
+            `;
+        openModal();
+      }
+
+      async function addBook() {
+        const title = document.getElementById("newBookTitle").value;
+        const author = document.getElementById("newBookAuthor").value;
+        if (!title || !author) {
+          showToast("请填写必填项", "error");
+          return;
+        }
+        const result = await apiCall("/books", {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            author,
+            publisher: document.getElementById("newBookPublisher").value,
+            isbn: document.getElementById("newBookIsbn").value,
+            category: document.getElementById("newBookCategory").value,
+            totalCopies:
+              parseInt(document.getElementById("newBookCopies").value) || 1,
+            availableCopies:
+              parseInt(document.getElementById("newBookCopies").value) || 1,
+          }),
+        });
+        closeModal();
+        if (result.success) {
+          showToast("添加成功", "success");
+          loadBooks();
+        } else showToast("添加失败", "error");
+      }
+
+      async function deleteBook(id, title) {
+        if (!confirm(`确定要删除《${title}》吗？`)) return;
+        const result = await apiCall("/books/" + id, { method: "DELETE" });
+        if (result.success) {
+          showToast("删除成功", "success");
+          loadBooks();
+        } else showToast("删除失败", "error");
+      }
+
+      async function loadUsers() {
+        const query = document.getElementById("userSearch").value;
+        const users = await apiCall("/users");
+        const userData = Array.isArray(users)
+          ? users
+          : users.value || users.data || [];
+        const filtered = query
+          ? userData.filter(
+              (u) =>
+                u.username.includes(query) ||
+                (u.studentId || "").includes(query),
+            )
+          : userData;
+        const admins = userData.filter((u) => u.role === "admin").length;
+
+        document.getElementById("userStats").innerHTML = `
+                <div class="stat-card"><div class="stat-value">${userData.length}</div><div class="stat-label">用户总数</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:#7C4DFF;">${admins}</div><div class="stat-label">管理员</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:#2196F3;">${userData.length - admins}</div><div class="stat-label">普通用户</div></div>
+            `;
+
+        const tbody = document.getElementById("userTableBody");
+        if (filtered.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="empty-state">暂无用户数据</td></tr>';
+          return;
+        }
+        tbody.innerHTML = filtered
+          .map(
+            (user) => `
+                <tr>
+                    <td><strong>${user.username}</strong></td>
+                    <td>${user.studentId || "-"}</td>
+                    <td>${user.email || "-"}</td>
+                    <td>${user.phone || "-"}</td>
+                    <td><span class="badge ${user.role === "admin" ? "badge-purple" : "badge-info"}">${user.role === "admin" ? "管理员" : "普通用户"}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="showUserDetail(${user.id})">详情</button>
+                        ${user.role !== "admin" ? `<button class="btn btn-sm btn-warning" onclick="toggleUserRole(${user.id}, '${user.role}')">${user.role === "admin" ? "降级" : "设为管理员"}</button>` : ""}
+                    </td>
+                </tr>
+            `,
+          )
+          .join("");
+      }
+
+      async function toggleUserRole(id, currentRole) {
+        const newRole = currentRole === "admin" ? "user" : "admin";
+        const result = await apiCall("/users/" + id + "/role", {
+          method: "PUT",
+          body: JSON.stringify({ role: newRole }),
+        });
+        if (result.success) {
+          showToast("角色更新成功", "success");
+          loadUsers();
+        } else showToast("更新失败", "error");
+      }
+
+      async function loadExceptions() {
+        const typeFilter = document.getElementById("exceptionTypeFilter").value;
+        const startDate = document.getElementById("exceptionStartDate").value;
+        const endDate = document.getElementById("exceptionEndDate").value;
+        let url = "/exceptions";
+        const params = [];
+        if (currentExceptionFilter !== "all")
+          params.push("status=" + currentExceptionFilter);
+        if (typeFilter) params.push("type=" + typeFilter);
+        if (startDate) params.push("startDate=" + startDate + "T00:00:00");
+        if (endDate) params.push("endDate=" + endDate + "T23:59:59");
+        if (params.length) url += "?" + params.join("&");
+
+        const result = await apiCall(url);
+        const excData = Array.isArray(result) ? result : result.data || [];
+        const statsResult = await apiCall("/exceptions/statistics");
+        const stats = statsResult.data || {};
+
+        document.getElementById("exceptionStats").innerHTML = `
+                <div class="stat-card"><div class="stat-value">${stats.totalExceptions || excData.length}</div><div class="stat-label">总异常数</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:#4CAF50;">${stats.resolvedExceptions || 0}</div><div class="stat-label">已解决</div></div>
+                <div class="stat-card"><div class="stat-value" style="color:#FF9800;">${(stats.statusCounts && stats.statusCounts.pending) || 0}</div><div class="stat-label">待处理</div></div>
+                <div class="stat-card"><div class="stat-value ${(stats.healthScore || 0) > 70 ? "good" : (stats.healthScore || 0) > 30 ? "warning" : "danger"}">${((stats.healthScore || 0) * 100).toFixed(1)}%</div><div class="stat-label">系统健康度</div></div>
+            `;
+
+        const listEl = document.getElementById("exceptionList");
+        if (excData.length === 0) {
+          listEl.innerHTML =
+            '<div class="empty-state"><p>暂无异常记录</p></div>';
+          updateBatchActions();
+          return;
+        }
+        listEl.innerHTML = excData
+          .map((exc) => {
+            const severityClass =
+              exc.severity === "high"
+                ? "high"
+                : exc.severity === "medium"
+                  ? "medium"
+                  : "low";
+            const statusMap = {
+              pending: ["待处理", "badge-warning"],
+              processing: ["处理中", "badge-info"],
+              resolved: ["已解决", "badge-success"],
+              ignored: ["已忽略", "badge-danger"],
+            };
+            const [statusLabel, statusClass] = statusMap[exc.status] || [
+              "未知",
+              "badge-info",
+            ];
+            const typeMap = {
+              overdue: "借阅逾期",
+              no_show: "预约未到",
+              system_error: "系统错误",
+              api_error: "接口错误",
+            };
+            const isSelected = selectedExceptions.has(exc.id.toString());
+            return `
+                    <div class="exception-card ${severityClass} ${isSelected ? "selected" : ""}" data-id="${exc.id}">
+                        <div class="exc-checkbox">
+                            <input type="checkbox" ${isSelected ? "checked" : ""} onchange="toggleExceptionSelection('${exc.id}', this.checked)">
+                        </div>
+                        <div class="exc-content">
+                            <div class="exc-header">
+                                <div>
+                                    <span class="badge ${statusClass}" style="margin-right:8px;">${statusLabel}</span>
+                                    <span class="badge badge-purple">${typeMap[exc.type] || exc.type}</span>
+                                    <span class="badge ${exc.severity === "high" ? "badge-danger" : exc.severity === "medium" ? "badge-warning" : "badge-success"}" style="margin-left:8px;">${exc.severity === "high" ? "高" : exc.severity === "medium" ? "中" : "低"}危</span>
+                                </div>
+                                <span style="font-size:12px;color:#999;">${new Date(exc.occurredAt).toLocaleString("zh-CN")}</span>
+                            </div>
+                            <div class="exc-title">${exc.title}</div>
+                            <div class="exc-desc">${exc.description || ""}</div>
+                            ${exc.module ? `<div class="exc-meta"><span>模块: ${exc.module}</span>${exc.relatedUserId ? `<span>关联用户ID: ${exc.relatedUserId}</span>` : ""}</div>` : ""}
+                            <div class="exc-actions">
+                                ${exc.status === "pending" ? `<button class="btn btn-sm btn-warning" onclick="updateExceptionStatus('${exc.id}', 'processing')">开始处理</button>` : ""}
+                                ${exc.status === "processing" ? `<button class="btn btn-sm btn-success" onclick="updateExceptionStatus('${exc.id}', 'resolved')">标记解决</button>` : ""}
+                                ${exc.status === "pending" || exc.status === "processing" ? `<button class="btn btn-sm btn-outline" onclick="updateExceptionStatus('${exc.id}', 'ignored')">忽略</button>` : ""}
+                                <button class="btn btn-sm btn-outline" onclick="showExceptionDetail('${exc.id}')">详情</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+          })
+          .join("");
+        updateBatchActions();
+      }
+
+      function filterExceptions(status, el) {
+        currentExceptionFilter = status;
+        document
+          .querySelectorAll("#exceptionTabs .tab")
+          .forEach((t) => t.classList.remove("active"));
+        if (el) el.classList.add("active");
+        loadExceptions();
+      }
+
+      function toggleExceptionSelection(id, checked) {
+        if (checked) {
+          selectedExceptions.add(id.toString());
+        } else {
+          selectedExceptions.delete(id.toString());
+        }
+        updateBatchActions();
+        const card = document.querySelector(`.exception-card[data-id="${id}"]`);
+        if (card) {
+          if (checked) {
+            card.classList.add("selected");
+          } else {
+            card.classList.remove("selected");
+          }
+        }
+      }
+
+      function updateBatchActions() {
+        const batchActions = document.getElementById("batchActions");
+        const selectedCount = document.getElementById("selectedCount");
+        if (selectedExceptions.size > 0) {
+          batchActions.style.display = "flex";
+          selectedCount.textContent = `已选择 ${selectedExceptions.size} 项`;
+        } else {
+          batchActions.style.display = "none";
+        }
+      }
+
+      function clearExceptionSelection() {
+        selectedExceptions.clear();
+        document
+          .querySelectorAll(".exception-card.selected")
+          .forEach((card) => {
+            card.classList.remove("selected");
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            if (checkbox) checkbox.checked = false;
+          });
+        updateBatchActions();
+      }
+
+      async function batchUpdateExceptionStatus(status) {
+        if (selectedExceptions.size === 0) {
+          showToast("请先选择要操作的异常记录", "error");
+          return;
+        }
+
+        let solution = "";
+        if (status === "resolved" || status === "processing") {
+          solution = prompt("请输入处理方案（可选）：") || "";
+        }
+
+        const ids = Array.from(selectedExceptions).map((id) => parseInt(id));
+        const result = await apiCall("/exceptions/batch/status", {
+          method: "PUT",
+          body: JSON.stringify({
+            ids,
+            status,
+            solution,
+            handledBy: currentUser.username,
+          }),
+        });
+
+        if (result.success) {
+          showToast(result.message, "success");
+          selectedExceptions.clear();
+          loadExceptions();
+        } else {
+          showToast("批量操作失败", "error");
+        }
+      }
+
+      async function batchDeleteExceptions() {
+        if (selectedExceptions.size === 0) {
+          showToast("请先选择要删除的异常记录", "error");
+          return;
+        }
+
+        if (
+          !confirm(
+            `确定要删除选中的 ${selectedExceptions.size} 条异常记录吗？此操作不可恢复。`,
+          )
+        ) {
+          return;
+        }
+
+        const ids = Array.from(selectedExceptions).map((id) => parseInt(id));
+        const result = await apiCall("/exceptions/batch", {
+          method: "DELETE",
+          body: JSON.stringify({ ids }),
+        });
+
+        if (result.success) {
+          showToast(result.message, "success");
+          selectedExceptions.clear();
+          loadExceptions();
+        } else {
+          showToast("批量删除失败", "error");
+        }
+      }
+
+      async function updateExceptionStatus(id, status) {
+        let solution = "";
+        if (status === "resolved" || status === "processing") {
+          solution = prompt("请输入处理方案（可选）：") || "";
+        }
+        const result = await apiCall("/exceptions/" + id + "/status", {
+          method: "PUT",
+          body: JSON.stringify({
+            status,
+            solution,
+            handledBy: currentUser.username,
+          }),
+        });
+        if (result.success) {
+          showToast("状态更新成功", "success");
+          loadExceptions();
+        } else showToast("更新失败", "error");
+      }
+
+      async function showExceptionDetail(id) {
+        const result = await apiCall("/exceptions/" + id);
+        const exc = result.data;
+        if (!exc) {
+          showToast("获取详情失败", "error");
+          return;
+        }
+        const typeMap = {
+          overdue: "借阅逾期",
+          no_show: "预约未到",
+          system_error: "系统错误",
+          api_error: "接口错误",
+        };
+        document.getElementById("modalTitle").textContent = "异常详情";
+        document.getElementById("modalBody").innerHTML = `
+                <div style="margin-bottom:16px;"><strong>标题：</strong>${exc.title}</div>
+                <div style="margin-bottom:16px;"><strong>类型：</strong>${typeMap[exc.type] || exc.type}</div>
+                <div style="margin-bottom:16px;"><strong>状态：</strong>${exc.status}</div>
+                <div style="margin-bottom:16px;"><strong>严重程度：</strong>${exc.severity}</div>
+                <div style="margin-bottom:16px;"><strong>模块：</strong>${exc.module || "-"}</div>
+                <div style="margin-bottom:16px;"><strong>描述：</strong>${exc.description || "-"}</div>
+                <div style="margin-bottom:16px;"><strong>发生时间：</strong>${new Date(exc.occurredAt).toLocaleString("zh-CN")}</div>
+                ${exc.handledAt ? `<div style="margin-bottom:16px;"><strong>处理时间：</strong>${new Date(exc.handledAt).toLocaleString("zh-CN")}</div>` : ""}
+                ${exc.handledBy ? `<div style="margin-bottom:16px;"><strong>处理人：</strong>${exc.handledBy}</div>` : ""}
+                ${exc.solution ? `<div style="margin-bottom:16px;"><strong>解决方案：</strong>${exc.solution}</div>` : ""}
+                ${exc.stackTrace ? `<div style="margin-bottom:16px;"><strong>错误堆栈：</strong><pre style="background:#f5f5f5;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;">${exc.stackTrace}</pre></div>` : ""}
+            `;
+        document.getElementById("modalFooter").innerHTML =
+          '<button class="btn btn-outline" onclick="closeModal()">关闭</button>';
+        openModal();
+      }
+
+      async function loadSettings() {
+        const result = await apiCall("/settings");
+        const settings = result.data || {};
+        document.getElementById("borrowSettings").innerHTML = `
+                <div class="setting-item">
+                    <div><div class="setting-label">借阅期限（天）</div><div class="setting-desc">用户借阅图书的最长天数</div></div>
+                    <input type="number" id="settingBorrowDays" value="${settings.borrowDays || 30}">
+                </div>
+                <div class="setting-item">
+                    <div><div class="setting-label">续借次数</div><div class="setting-desc">允许续借的最大次数</div></div>
+                    <input type="number" id="settingRenewCount" value="${settings.renewCount || 1}">
+                </div>
+                <div class="setting-item">
+                    <div><div class="setting-label">逾期罚款（元/天）</div><div class="setting-desc">每逾期一天的罚款金额</div></div>
+                    <input type="number" id="settingOverdueFine" value="${settings.overdueFine || 0.5}" step="0.1">
+                </div>
+                <div class="setting-item">
+                    <div><div class="setting-label">最大借阅数量</div><div class="setting-desc">用户同时可借阅的最大图书数量</div></div>
+                    <input type="number" id="settingMaxBorrows" value="${settings.maxBorrows || 5}">
+                </div>
+                <div style="margin-top:20px;text-align:right;">
+                    <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                </div>
+            `;
+        document.getElementById("systemSettings").innerHTML = `
+                <div class="setting-item">
+                    <div><div class="setting-label">系统名称</div><div class="setting-desc">显示在系统各处的名称</div></div>
+                    <input type="text" id="settingSystemName" value="${settings.systemName || "智图图书馆"}" style="width:200px;">
+                </div>
+                <div class="setting-item">
+                    <div><div class="setting-label">维护模式</div><div class="setting-desc">开启后普通用户无法使用系统</div></div>
+                    <select id="settingMaintenance" style="width:100px;">
+                        <option value="false" ${settings.maintenance !== "true" ? "selected" : ""}>关闭</option>
+                        <option value="true" ${settings.maintenance === "true" ? "selected" : ""}>开启</option>
+                    </select>
+                </div>
+                <div style="margin-top:20px;text-align:right;">
+                    <button class="btn btn-primary" onclick="saveSettings()">保存设置</button>
+                </div>
+            `;
+      }
+
+      async function saveSettings() {
+        const settings = {
+          borrowDays:
+            parseInt(document.getElementById("settingBorrowDays").value) || 30,
+          renewCount:
+            parseInt(document.getElementById("settingRenewCount").value) || 1,
+          overdueFine:
+            parseFloat(document.getElementById("settingOverdueFine").value) ||
+            0.5,
+          maxBorrows:
+            parseInt(document.getElementById("settingMaxBorrows").value) || 5,
+          systemName:
+            document.getElementById("settingSystemName").value || "智图图书馆",
+          maintenance: document.getElementById("settingMaintenance").value,
+        };
+        const result = await apiCall("/settings", {
+          method: "POST",
+          body: JSON.stringify(settings),
+        });
+        if (result.success) showToast("设置保存成功", "success");
+        else showToast("保存失败", "error");
+      }
+
+      async function loadSharedBooksForReview() {
+        let url = "/shared-books";
+        const sharedBooks = await apiCall(url);
+        const bookData = sharedBooks.data || sharedBooks || [];
+
+        const pending = bookData.filter((b) => b.status === "pending");
+        const approved = bookData.filter(
+          (b) => b.status === "available" || b.status === "borrowed",
+        );
+        const rejected = bookData.filter((b) => b.status === "rejected");
+
+        document.getElementById("reviewStats").innerHTML = `
+          <div class="stat-card"><div class="stat-value">${bookData.length}</div><div class="stat-label">共享图书总数</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#FF9800;">${pending.length}</div><div class="stat-label">待审核</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#4CAF50;">${approved.length}</div><div class="stat-label">已通过</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#f44336;">${rejected.length}</div><div class="stat-label">已拒绝</div></div>
+        `;
+
+        let filtered = bookData;
+        if (currentReviewFilter === "pending") filtered = pending;
+        else if (currentReviewFilter === "approved") filtered = approved;
+        else if (currentReviewFilter === "rejected") filtered = rejected;
+
+        const tbody = document.getElementById("reviewTableBody");
+        if (filtered.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="empty-state">暂无共享图书数据</td></tr>';
+          return;
+        }
+        tbody.innerHTML = filtered
+          .map((book) => {
+            const statusMap = {
+              pending: ["待审核", "badge-warning"],
+              available: ["可借阅", "badge-success"],
+              borrowed: ["已借出", "badge-info"],
+              rejected: ["已拒绝", "badge-danger"],
+            };
+            const [statusLabel, statusClass] = statusMap[book.status] || [
+              "未知",
+              "badge-info",
+            ];
+            const shareTypeMap = {
+              permanent: "永久共享",
+              temporary: "临时共享",
+            };
+            return `
+            <tr>
+              <td><strong>${book.title}</strong></td>
+              <td>${book.author}</td>
+              <td>${book.sharerName || "-"}</td>
+              <td>${shareTypeMap[book.shareType] || book.shareType || "-"}</td>
+              <td>${book.conditionLevel || "-"}</td>
+              <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+              <td>
+                <button class="btn btn-sm btn-outline" onclick="showSharedBookDetail(${book.id})">详情</button>
+                ${
+                  book.status === "pending"
+                    ? `
+                  <button class="btn btn-sm btn-success" onclick="approveSharedBook(${book.id})">通过</button>
+                  <button class="btn btn-sm btn-danger" onclick="rejectSharedBook(${book.id})">拒绝</button>
+                `
+                    : ""
+                }
+              </td>
+            </tr>
+          `;
+          })
+          .join("");
+      }
+
+      function filterSharedBooks(status, el) {
+        currentReviewFilter = status;
+        document
+          .querySelectorAll("#reviewTabs .tab")
+          .forEach((t) => t.classList.remove("active"));
+        if (el) el.classList.add("active");
+        loadSharedBooksForReview();
+      }
+
+      async function showSharedBookDetail(id) {
+        const result = await apiCall("/shared-books/" + id);
+        const book = result.data || result;
+        if (!book) {
+          showToast("共享图书不存在", "error");
+          return;
+        }
+        const shareTypeMap = { permanent: "永久共享", temporary: "临时共享" };
+        const statusMap = {
+          pending: "待审核",
+          available: "可借阅",
+          borrowed: "已借出",
+          rejected: "已拒绝",
+        };
+        document.getElementById("modalTitle").textContent = "共享图书详情";
+        document.getElementById("modalBody").innerHTML = `
+          <div style="margin-bottom:16px;"><strong>书名：</strong>${book.title}</div>
+          <div style="margin-bottom:16px;"><strong>作者：</strong>${book.author}</div>
+          <div style="margin-bottom:16px;"><strong>出版社：</strong>${book.publisher || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>ISBN：</strong>${book.isbn || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>共享者：</strong>${book.sharerName || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>年级：</strong>${book.sharerGrade || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>院系：</strong>${book.sharerDepartment || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>共享方式：</strong>${shareTypeMap[book.shareType] || book.shareType || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>新旧程度：</strong>${book.conditionLevel || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>索书号：</strong>${book.shelfNumber || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>状态：</strong><span class="badge ${book.status === "available" ? "badge-success" : book.status === "pending" ? "badge-warning" : book.status === "rejected" ? "badge-danger" : "badge-info"}">${statusMap[book.status] || book.status}</span></div>
+          <div style="margin-bottom:16px;"><strong>备注：</strong>${book.remark || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>创建时间：</strong>${book.createdAt ? new Date(book.createdAt).toLocaleString("zh-CN") : "-"}</div>
+        `;
+        document.getElementById("modalFooter").innerHTML = `
+          <button class="btn btn-outline" onclick="closeModal()">关闭</button>
+          ${
+            book.status === "pending"
+              ? `
+            <button class="btn btn-success" onclick="approveSharedBook(${book.id}); closeModal();">通过</button>
+            <button class="btn btn-danger" onclick="rejectSharedBook(${book.id}); closeModal();">拒绝</button>
+          `
+              : ""
+          }
+        `;
+        openModal();
+      }
+
+      async function approveSharedBook(id) {
+        const result = await apiCall("/shared-books/" + id + "/approve", {
+          method: "PUT",
+        });
+        if (result.success) {
+          showToast("审核通过成功", "success");
+          loadSharedBooksForReview();
+        } else {
+          showToast("审核失败", "error");
+        }
+      }
+
+      async function rejectSharedBook(id) {
+        const reason = prompt("请输入拒绝原因（可选）：") || "";
+        const result = await apiCall("/shared-books/" + id + "/reject", {
+          method: "PUT",
+          body: JSON.stringify({ reason }),
+        });
+        if (result.success) {
+          showToast("已拒绝该共享图书", "success");
+          loadSharedBooksForReview();
+        } else {
+          showToast("操作失败", "error");
+        }
+      }
+
+      async function showBookDetail(id) {
+        console.log("showBookDetail called with id:", id, "type:", typeof id);
+        const result = await apiCall("/books/" + id);
+        console.log("API result:", result);
+        if (!result) {
+          showToast("图书不存在", "error");
+          return;
+        }
+        const book = result.data || result;
+        console.log("book object:", book);
+        if (!book || !book.id) {
+          showToast("图书不存在", "error");
+          return;
+        }
+        document.getElementById("modalTitle").textContent = "图书详情";
+        document.getElementById("modalBody").innerHTML = `
+                <div style="margin-bottom:16px;"><strong>书名：</strong>${book.title}</div>
+                <div style="margin-bottom:16px;"><strong>作者：</strong>${book.author}</div>
+                <div style="margin-bottom:16px;"><strong>出版社：</strong>${book.publisher || "-"}</div>
+                <div style="margin-bottom:16px;"><strong>ISBN：</strong>${book.isbn || "-"}</div>
+                <div style="margin-bottom:16px;"><strong>分类：</strong>${book.category || "未分类"}</div>
+                <div style="margin-bottom:16px;"><strong>总副本：</strong>${book.totalCopies}</div>
+                <div style="margin-bottom:16px;"><strong>可借副本：</strong>${book.availableCopies}</div>
+                <div style="margin-bottom:16px;"><strong>状态：</strong><span class="badge ${book.availableCopies > 0 ? "badge-success" : "badge-danger"}">${book.availableCopies > 0 ? "可借阅" : "已借出"}</span></div>
+            `;
+        document.getElementById("modalFooter").innerHTML = `
+                <button class="btn btn-outline" onclick="closeModal()">关闭</button>
+                <button class="btn btn-primary" onclick="showEditBookModal(${book.id})">编辑</button>
+            `;
+        openModal();
+      }
+
+      async function showEditBookModal(id) {
+        console.log(
+          "showEditBookModal called with id:",
+          id,
+          "type:",
+          typeof id,
+        );
+        const result = await apiCall("/books/" + id);
+        console.log("API result:", result);
+        if (!result) {
+          showToast("图书不存在", "error");
+          return;
+        }
+        const book = result.data || result;
+        console.log("book object:", book);
+        if (!book || !book.id) {
+          showToast("图书不存在", "error");
+          return;
+        }
+        document.getElementById("modalTitle").textContent = "编辑图书";
+        document.getElementById("modalBody").innerHTML = `
+                <div class="form-group"><label>书名 *</label><input type="text" id="editBookTitle" value="${book.title}"></div>
+                <div class="form-group"><label>作者 *</label><input type="text" id="editBookAuthor" value="${book.author}"></div>
+                <div class="form-group"><label>出版社</label><input type="text" id="editBookPublisher" value="${book.publisher || ""}"></div>
+                <div class="form-group"><label>ISBN</label><input type="text" id="editBookIsbn" value="${book.isbn || ""}"></div>
+                <div class="form-group"><label>分类</label><input type="text" id="editBookCategory" value="${book.category || ""}"></div>
+                <div class="form-group"><label>总副本数量</label><input type="number" id="editBookTotalCopies" value="${book.totalCopies}"></div>
+                <div class="form-group"><label>可借副本数量</label><input type="number" id="editBookAvailableCopies" value="${book.availableCopies}"></div>
+            `;
+        document.getElementById("modalFooter").innerHTML = `
+                <button class="btn btn-outline" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="updateBook(${book.id})">保存</button>
+            `;
+        openModal();
+      }
+
+      async function updateBook(id) {
+        const title = document.getElementById("editBookTitle").value;
+        const author = document.getElementById("editBookAuthor").value;
+        if (!title || !author) {
+          showToast("请填写必填项", "error");
+          return;
+        }
+        const result = await apiCall("/books/" + id, {
+          method: "PUT",
+          body: JSON.stringify({
+            title,
+            author,
+            publisher: document.getElementById("editBookPublisher").value,
+            isbn: document.getElementById("editBookIsbn").value,
+            category: document.getElementById("editBookCategory").value,
+            totalCopies:
+              parseInt(document.getElementById("editBookTotalCopies").value) ||
+              1,
+            availableCopies:
+              parseInt(
+                document.getElementById("editBookAvailableCopies").value,
+              ) || 0,
+          }),
+        });
+        closeModal();
+        if (result && result.id) {
+          showToast("更新成功", "success");
+          loadBooks();
+        } else showToast("更新失败", "error");
+      }
+
+      async function showUserDetail(id) {
+        const result = await apiCall("/users/" + id);
+        const user = result.data;
+        if (!user) {
+          showToast("用户不存在", "error");
+          return;
+        }
+        document.getElementById("modalTitle").textContent = "用户详情";
+        document.getElementById("modalBody").innerHTML = `
+          <div style="margin-bottom:16px;"><strong>用户名：</strong>${user.username}</div>
+          <div style="margin-bottom:16px;"><strong>学号：</strong>${user.studentId || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>邮箱：</strong>${user.email || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>手机号：</strong>${user.phone || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>角色：</strong><span class="badge ${user.role === "admin" ? "badge-purple" : "badge-info"}">${user.role === "admin" ? "管理员" : "普通用户"}</span></div>
+          <div style="margin-bottom:16px;"><strong>兴趣标签：</strong>${user.interests || "-"}</div>
+          <div style="margin-bottom:16px;"><strong>注册时间：</strong>${user.createdAt ? new Date(user.createdAt).toLocaleString("zh-CN") : "-"}</div>
+          <div style="margin-bottom:16px;"><strong>最后登录：</strong>${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString("zh-CN") : "-"}</div>
+        `;
+        document.getElementById("modalFooter").innerHTML = `
+          <button class="btn btn-outline" onclick="closeModal()">关闭</button>
+          <button class="btn btn-warning" onclick="showEditUserRole(${user.id}, '${user.role}')">修改角色</button>
+        `;
+        openModal();
+      }
+
+      function showEditUserRole(id, currentRole) {
+        document.getElementById("modalTitle").textContent = "修改用户角色";
+        document.getElementById("modalBody").innerHTML = `
+          <div class="form-group">
+            <label>当前角色</label>
+            <input type="text" value="${currentRole === "admin" ? "管理员" : "普通用户"}" disabled>
+          </div>
+          <div class="form-group">
+            <label>新角色</label>
+            <select id="newUserRole">
+              <option value="user" ${currentRole !== "admin" ? "selected" : ""}>普通用户</option>
+              <option value="admin" ${currentRole === "admin" ? "selected" : ""}>管理员</option>
+            </select>
+          </div>
+        `;
+        document.getElementById("modalFooter").innerHTML = `
+          <button class="btn btn-outline" onclick="closeModal()">取消</button>
+          <button class="btn btn-primary" onclick="updateUserRole(${id})">保存</button>
+        `;
+        openModal();
+      }
+
+      async function updateUserRole(id) {
+        const newRole = document.getElementById("newUserRole").value;
+        const result = await apiCall("/users/" + id + "/role", {
+          method: "PUT",
+          body: JSON.stringify({ role: newRole }),
+        });
+        closeModal();
+        if (result.success) {
+          showToast("角色更新成功", "success");
+          loadUsers();
+        } else {
+          showToast("更新失败", "error");
+        }
+      }
+
+      function openModal() {
+        document.getElementById("modalOverlay").classList.add("show");
+      }
+      function closeModal() {
+        document.getElementById("modalOverlay").classList.remove("show");
+      }
+
+      document
+        .getElementById("modalOverlay")
+        .addEventListener("click", function (e) {
+          if (e.target === this) closeModal();
+        });
+
+      document
+        .getElementById("loginPassword")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") handleLogin();
+        });
+
+      async function exportData() {
+        if (!confirm("确定要导出系统所有数据吗？")) return;
+
+        try {
+          const exportData = {};
+
+          const booksResult = await apiCall("/books");
+          exportData.books = booksResult.data || [];
+
+          const usersResult = await apiCall("/users");
+          exportData.users = usersResult.data || [];
+
+          const borrowResult = await apiCall("/borrow-records");
+          exportData.borrowRecords = borrowResult.data || [];
+
+          const reservationsResult = await apiCall("/reservations");
+          exportData.reservations = reservationsResult.data || [];
+
+          const sharedResult = await apiCall("/shared-books");
+          exportData.sharedBooks = sharedResult.data || [];
+
+          const exceptionsResult = await apiCall("/exceptions");
+          exportData.exceptions = exceptionsResult.data || [];
+
+          const settingsResult = await apiCall("/settings");
+          exportData.settings = settingsResult.data || {};
+
+          const dataStr = JSON.stringify(exportData, null, 2);
+          const dataBlob = new Blob([dataStr], { type: "application/json" });
+          const url = URL.createObjectURL(dataBlob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `library_data_${new Date().toISOString().slice(0, 10)}.json`;
+          link.click();
+          URL.revokeObjectURL(url);
+
+          showToast("数据导出成功", "success");
+        } catch (e) {
+          showToast("数据导出失败", "error");
+        }
+      }
+
+      async function initData() {
+        if (!confirm("确定要初始化测试数据吗？此操作会清除现有数据！")) return;
+
+        try {
+          const result = await apiCall("/settings/init", { method: "POST" });
+          if (result.success) {
+            showToast("数据初始化成功", "success");
+            loadDashboard();
+          } else {
+            showToast("初始化失败", "error");
+          }
+        } catch (e) {
+          showToast("初始化失败", "error");
+        }
+      }
+
+      async function loadSystemLogs() {
+        const result = await apiCall("/system-logs?page=0&size=50");
+        const logs = result.data || [];
+
+        const logsEl = document.getElementById("systemLogs");
+        if (logs.length === 0) {
+          logsEl.innerHTML =
+            '<div class="empty-state"><p>暂无系统日志</p></div>';
+          return;
+        }
+
+        logsEl.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>级别</th>
+                <th>模块</th>
+                <th>操作</th>
+                <th>描述</th>
+                <th>用户</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${logs
+                .map((log) => {
+                  const levelClass =
+                    log.level === "ERROR"
+                      ? "badge-danger"
+                      : log.level === "WARN"
+                        ? "badge-warning"
+                        : "badge-info";
+                  return `
+                  <tr>
+                    <td><span class="badge ${levelClass}">${log.level}</span></td>
+                    <td>${log.module}</td>
+                    <td>${log.action}</td>
+                    <td>${log.description || "-"}</td>
+                    <td>${log.userName || "-"}</td>
+                    <td>${new Date(log.createdAt).toLocaleString("zh-CN")}</td>
+                  </tr>
+                `;
+                })
+                .join("")}
+            </tbody>
+          </table>
+        `;
+      }
+    </script>
+  </body>
+</html>

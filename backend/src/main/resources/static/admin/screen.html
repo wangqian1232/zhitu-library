@@ -1,0 +1,1760 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>智慧图书馆运营数据监控中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --bg-primary: #0a0e1a;
+        --bg-secondary: #111827;
+        --bg-card: rgba(17, 24, 39, 0.65);
+        --border-color: rgba(59, 130, 246, 0.15);
+        --border-glow: rgba(6, 182, 212, 0.25);
+        --accent-blue: #3b82f6;
+        --accent-cyan: #06b6d4;
+        --accent-orange: #f97316;
+        --accent-green: #10b981;
+        --accent-red: #ef4444;
+        --accent-purple: #8b5cf6;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --card-radius: 12px;
+        --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      body {
+        font-family:
+          "Inter",
+          "Microsoft YaHei",
+          "PingFang SC",
+          -apple-system,
+          sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            ellipse at 20% 50%,
+            rgba(59, 130, 246, 0.08) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 80% 20%,
+            rgba(6, 182, 212, 0.06) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 50% 80%,
+            rgba(139, 92, 246, 0.04) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      #particles-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 32px;
+        background: rgba(10, 14, 26, 0.85);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-color);
+        position: relative;
+        z-index: 10;
+      }
+
+      .header::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--accent-cyan),
+          var(--accent-blue),
+          transparent
+        );
+        opacity: 0.5;
+      }
+
+      .header-title {
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        background: linear-gradient(135deg, #60a5fa, #06b6d4, #a78bfa);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 4s ease infinite;
+      }
+
+      @keyframes gradientShift {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      .header-time {
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .header-time::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent-green);
+        box-shadow: 0 0 8px var(--accent-green);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .fullscreen-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: rgba(10, 14, 26, 0.6);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+      }
+
+      .fullscreen-btn:hover {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: var(--border-glow);
+        color: var(--accent-cyan);
+        transform: scale(1.05);
+      }
+
+      .fullscreen-btn:active {
+        transform: scale(0.95);
+      }
+
+      .fullscreen-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      :fullscreen .header {
+        padding: 20px 40px;
+      }
+
+      :fullscreen .dashboard {
+        height: calc(100vh - 84px);
+        padding: 24px;
+        gap: 24px;
+      }
+
+      :fullscreen .card {
+        padding: 24px;
+      }
+
+      :fullscreen .header-title {
+        font-size: 28px;
+      }
+
+      :fullscreen .stat-value {
+        font-size: 34px;
+      }
+
+      :fullscreen .chart-container {
+        height: 260px;
+      }
+
+      :fullscreen .chart-container.large {
+        height: 380px;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(0.8);
+        }
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: 25% 50% 25%;
+        gap: 20px;
+        padding: 20px;
+        height: calc(100vh - 72px);
+        position: relative;
+        z-index: 1;
+      }
+
+      @media (min-width: 1920px) {
+        .dashboard {
+          gap: 24px;
+          padding: 24px;
+        }
+        .card {
+          padding: 24px;
+        }
+        .chart-container {
+          height: 260px;
+        }
+        .chart-container.large {
+          height: 380px;
+        }
+        .stat-value {
+          font-size: 34px;
+        }
+        .header-title {
+          font-size: 28px;
+        }
+        .ranking-list {
+          max-height: 320px;
+        }
+        .recent-logs-container {
+          max-height: 300px;
+        }
+      }
+
+      @media (min-width: 2560px) {
+        .dashboard {
+          gap: 28px;
+          padding: 32px;
+          height: calc(100vh - 80px);
+        }
+        .header {
+          padding: 20px 48px;
+        }
+        .header-title {
+          font-size: 32px;
+        }
+        .card {
+          padding: 28px;
+        }
+        .chart-container {
+          height: 320px;
+        }
+        .chart-container.large {
+          height: 460px;
+        }
+        .stat-value {
+          font-size: 38px;
+          height: 44px;
+          line-height: 44px;
+        }
+        .flip-digit-wrapper {
+          width: 24px;
+          height: 44px;
+        }
+        .flip-digit-strip span {
+          height: 44px;
+          line-height: 44px;
+          font-size: 34px;
+        }
+        .stat-label {
+          font-size: 14px;
+        }
+        .card-title {
+          font-size: 17px;
+        }
+        .ranking-list {
+          max-height: 380px;
+        }
+        .recent-logs-container {
+          max-height: 360px;
+        }
+      }
+
+      .column {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .card {
+        background: var(--bg-card);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border-color);
+        border-radius: var(--card-radius);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        transition: all var(--transition-normal);
+        animation: cardEntrance 0.6s ease-out both;
+      }
+
+      .card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(6, 182, 212, 0.3),
+          transparent
+        );
+      }
+
+      .card:hover {
+        border-color: var(--border-glow);
+        box-shadow:
+          0 8px 32px rgba(6, 182, 212, 0.1),
+          0 0 0 1px rgba(6, 182, 212, 0.1);
+        transform: translateY(-2px);
+      }
+
+      @keyframes cardEntrance {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .column:nth-child(1) .card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .column:nth-child(1) .card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .column:nth-child(2) .card:nth-child(1) {
+        animation-delay: 0.15s;
+      }
+      .column:nth-child(2) .card:nth-child(2) {
+        animation-delay: 0.25s;
+      }
+      .column:nth-child(3) .card:nth-child(1) {
+        animation-delay: 0.2s;
+      }
+      .column:nth-child(3) .card:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+
+      .card-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: 0.5px;
+      }
+
+      .card-title::before {
+        content: "";
+        width: 3px;
+        height: 16px;
+        border-radius: 2px;
+        background: linear-gradient(
+          180deg,
+          var(--accent-cyan),
+          var(--accent-blue)
+        );
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .stat-card {
+        background: rgba(10, 14, 26, 0.5);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(59, 130, 246, 0.05),
+          transparent
+        );
+        opacity: 0;
+        transition: opacity var(--transition-normal);
+      }
+
+      .stat-card:hover {
+        transform: translateY(-3px) scale(1.02);
+        border-color: var(--border-glow);
+        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+      }
+
+      .stat-card:hover::after {
+        opacity: 1;
+      }
+
+      .stat-value {
+        font-size: 30px;
+        font-weight: 700;
+        color: var(--text-primary);
+        transition: all var(--transition-slow);
+        font-variant-numeric: tabular-nums;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+        height: 38px;
+        line-height: 38px;
+      }
+
+      .stat-value .flip-digit {
+        display: inline-block;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .flip-container {
+        display: flex;
+        justify-content: center;
+        gap: 2px;
+      }
+
+      .flip-digit-wrapper {
+        width: 22px;
+        height: 38px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .flip-digit-strip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .flip-digit-strip span {
+        display: block;
+        width: 100%;
+        height: 38px;
+        line-height: 38px;
+        text-align: center;
+        font-size: 30px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .stat-value.warning {
+        color: var(--accent-orange);
+        text-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+      }
+
+      .stat-value.flash {
+        animation: valueFlash 0.8s ease-out;
+      }
+
+      @keyframes valueFlash {
+        0% {
+          transform: scale(1);
+        }
+        30% {
+          transform: scale(1.15);
+          color: var(--accent-cyan);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 6px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-change {
+        font-size: 11px;
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .stat-change.up {
+        color: var(--accent-green);
+      }
+
+      .stat-change.down {
+        color: var(--accent-red);
+      }
+
+      .chart-container {
+        width: 100%;
+        height: 220px;
+      }
+
+      .chart-container.large {
+        height: 320px;
+      }
+
+      .trend-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .trend-tab {
+        padding: 6px 16px;
+        border-radius: 6px;
+        background: rgba(10, 14, 26, 0.5);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 500;
+        transition: all var(--transition-fast);
+        letter-spacing: 0.3px;
+      }
+
+      .trend-tab.active {
+        background: linear-gradient(
+          135deg,
+          rgba(6, 182, 212, 0.2),
+          rgba(59, 130, 246, 0.2)
+        );
+        color: var(--accent-cyan);
+        border-color: var(--accent-cyan);
+        box-shadow: 0 0 12px rgba(6, 182, 212, 0.15);
+      }
+
+      .trend-tab:hover:not(.active) {
+        border-color: var(--border-glow);
+        color: var(--text-secondary);
+      }
+
+      .ranking-list {
+        max-height: 280px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(6, 182, 212, 0.2) transparent;
+      }
+
+      .ranking-list::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .ranking-list::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .ranking-list::-webkit-scrollbar-thumb {
+        background: rgba(6, 182, 212, 0.2);
+        border-radius: 2px;
+      }
+
+      .ranking-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 10px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        transition: all var(--transition-fast);
+        cursor: default;
+      }
+
+      .ranking-item:hover {
+        background: rgba(59, 130, 246, 0.08);
+        transform: translateX(4px);
+      }
+
+      .ranking-rank {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        margin-right: 12px;
+        flex-shrink: 0;
+      }
+
+      .ranking-rank.gold {
+        background: linear-gradient(135deg, #fbbf24, #f59e0b);
+        color: #1a1a2e;
+        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+      }
+
+      .ranking-rank.silver {
+        background: linear-gradient(135deg, #d1d5db, #9ca3af);
+        color: #1a1a2e;
+        box-shadow: 0 2px 8px rgba(156, 163, 175, 0.3);
+      }
+
+      .ranking-rank.bronze {
+        background: linear-gradient(135deg, #d97706, #b45309);
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+      }
+
+      .ranking-rank.normal {
+        background: rgba(30, 41, 59, 0.6);
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+      }
+
+      .ranking-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .ranking-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ranking-author {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      .ranking-count {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--accent-blue);
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .recent-logs-container {
+        max-height: 260px;
+        overflow: hidden;
+        position: relative;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .recent-logs-container::-webkit-scrollbar {
+        display: none;
+      }
+
+      .recent-logs-container::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 40px;
+        background: linear-gradient(transparent, var(--bg-card));
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .recent-logs-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(var(--bg-card), transparent);
+        pointer-events: none;
+        z-index: 2;
+      }
+
+      .recent-logs-scroll {
+        animation: scrollUp var(--scroll-speed, 25s) linear infinite;
+      }
+
+      .recent-logs-container:hover .recent-logs-scroll {
+        animation-play-state: paused;
+      }
+
+      @keyframes scrollUp {
+        0% {
+          transform: translateY(0);
+        }
+        100% {
+          transform: translateY(-50%);
+        }
+      }
+
+      .log-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.08);
+        transition: background var(--transition-fast);
+      }
+
+      .log-item:hover {
+        background: rgba(59, 130, 246, 0.05);
+      }
+
+      .log-user {
+        flex: 1;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .log-book {
+        flex: 1.5;
+        font-size: 12px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .log-time {
+        font-size: 11px;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .log-status {
+        font-size: 11px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        margin-left: 8px;
+        flex-shrink: 0;
+        font-weight: 500;
+      }
+
+      .log-status.active {
+        background: rgba(59, 130, 246, 0.15);
+        color: var(--accent-blue);
+      }
+
+      .log-status.returned {
+        background: rgba(16, 185, 129, 0.15);
+        color: var(--accent-green);
+      }
+
+      /* Skeleton Loading */
+      .skeleton {
+        position: relative;
+        overflow: hidden;
+        border-radius: 6px;
+      }
+
+      .skeleton::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(59, 130, 246, 0.08),
+          transparent
+        );
+        animation: shimmer 1.5s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+
+      .skeleton-stat {
+        height: 60px;
+        background: rgba(30, 41, 59, 0.4);
+        border-radius: 10px;
+      }
+
+      .skeleton-chart {
+        height: 220px;
+        background: rgba(30, 41, 59, 0.4);
+        border-radius: 10px;
+      }
+
+      .skeleton-chart.large {
+        height: 320px;
+      }
+
+      .skeleton-list-item {
+        height: 44px;
+        background: rgba(30, 41, 59, 0.4);
+        border-radius: 8px;
+        margin-bottom: 6px;
+      }
+
+      .skeleton-text {
+        height: 14px;
+        background: rgba(30, 41, 59, 0.4);
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+
+      .skeleton-text.short {
+        width: 60%;
+      }
+
+      /* Data update indicator */
+      .update-indicator {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        padding: 8px 16px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: 8px;
+        color: var(--accent-green);
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all var(--transition-normal);
+        z-index: 100;
+        pointer-events: none;
+      }
+
+      .update-indicator.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .update-indicator::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent-green);
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      /* Responsive */
+      @media (max-width: 1400px) {
+        .dashboard {
+          grid-template-columns: 30% 40% 30%;
+        }
+      }
+
+      @media (max-width: 1024px) {
+        .dashboard {
+          grid-template-columns: 1fr;
+          height: auto;
+        }
+        .header-title {
+          font-size: 18px;
+        }
+      }
+
+      /* Accessibility */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+    <div class="header" role="banner">
+      <h1 class="header-title">智慧图书馆运营数据监控中心</h1>
+      <div class="header-actions">
+        <div
+          class="header-time"
+          id="headerTime"
+          role="timer"
+          aria-label="当前时间"
+        ></div>
+        <button
+          class="fullscreen-btn"
+          id="fullscreenBtn"
+          onclick="toggleFullscreen()"
+          title="全屏显示"
+          aria-label="切换全屏显示"
+        >
+          <svg
+            id="fullscreenIcon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 3 21 3 21 9" />
+            <polyline points="9 21 3 21 3 15" />
+            <line x1="21" y1="3" x2="14" y2="10" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="update-indicator"
+      id="updateIndicator"
+      role="status"
+      aria-live="polite"
+    >
+      数据已更新
+    </div>
+
+    <div class="dashboard" role="main">
+      <div class="column">
+        <div class="card" aria-label="实时数据概览">
+          <div class="card-title">实时数据</div>
+          <div class="stats-grid" id="realTimeStats">
+            <div class="skeleton skeleton-stat"></div>
+            <div class="skeleton skeleton-stat"></div>
+            <div class="skeleton skeleton-stat"></div>
+            <div class="skeleton skeleton-stat"></div>
+          </div>
+        </div>
+        <div class="card" aria-label="借阅状态分布">
+          <div class="card-title">借阅状态分布</div>
+          <div class="chart-container" id="statusChart">
+            <div class="skeleton skeleton-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="card" aria-label="借阅趋势分析">
+          <div class="card-title">借阅趋势分析</div>
+          <div class="trend-tabs" role="tablist">
+            <div
+              class="trend-tab active"
+              role="tab"
+              aria-selected="true"
+              onclick="switchTrend(7, this)"
+            >
+              近7天
+            </div>
+            <div
+              class="trend-tab"
+              role="tab"
+              aria-selected="false"
+              onclick="switchTrend(30, this)"
+            >
+              近30天
+            </div>
+          </div>
+          <div class="chart-container large" id="trendChart">
+            <div class="skeleton skeleton-chart large"></div>
+          </div>
+        </div>
+        <div class="card" aria-label="图书分类统计">
+          <div class="card-title">图书分类统计</div>
+          <div class="chart-container" id="categoryChart">
+            <div class="skeleton skeleton-chart"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="card" aria-label="热门图书排行榜">
+          <div class="card-title">热门图书排行榜</div>
+          <div class="ranking-list" id="rankingList">
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+          </div>
+        </div>
+        <div class="card" aria-label="最近借阅记录">
+          <div class="card-title">最近借阅记录</div>
+          <div class="recent-logs-container" id="recentLogs">
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+            <div class="skeleton skeleton-list-item"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "http://localhost:8080/api";
+      let statusChart, trendChart, categoryChart;
+      let currentTrendDays = 7;
+      let dashboardData = null;
+      let previousStats = null;
+
+      function updateTime() {
+        const now = new Date();
+        const weekdays = [
+          "星期日",
+          "星期一",
+          "星期二",
+          "星期三",
+          "星期四",
+          "星期五",
+          "星期六",
+        ];
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+        const seconds = String(now.getSeconds()).padStart(2, "0");
+        const weekday = weekdays[now.getDay()];
+        document.getElementById("headerTime").textContent =
+          `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${weekday}`;
+      }
+
+      setInterval(updateTime, 1000);
+      updateTime();
+
+      async function apiCall(url) {
+        try {
+          const response = await fetch(API_BASE + url);
+          if (!response.ok) return null;
+          return await response.json();
+        } catch (e) {
+          console.error("API Error:", e);
+          return null;
+        }
+      }
+
+      function animateValue(element, start, end, duration) {
+        const range = end - start;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = Math.round(start + range * eased);
+          element.textContent = current;
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          }
+        }
+
+        requestAnimationFrame(update);
+      }
+
+      function createFlipCounter(value, duration = 800) {
+        const strValue = String(value);
+        const container = document.createElement("div");
+        container.className = "flip-container";
+
+        for (let i = 0; i < strValue.length; i++) {
+          const char = strValue[i];
+          const wrapper = document.createElement("div");
+          wrapper.className = "flip-digit-wrapper";
+
+          const strip = document.createElement("div");
+          strip.className = "flip-digit-strip";
+
+          for (let d = 0; d <= 9; d++) {
+            const span = document.createElement("span");
+            span.textContent = d;
+            strip.appendChild(span);
+          }
+
+          wrapper.appendChild(strip);
+          container.appendChild(wrapper);
+
+          const digit = parseInt(char);
+          setTimeout(() => {
+            strip.style.transform = `translateY(-${digit * 38}px)`;
+          }, i * 60);
+        }
+
+        return container;
+      }
+
+      function updateFlipCounter(container, newValue) {
+        const strValue = String(newValue);
+        const wrappers = container.querySelectorAll(".flip-digit-wrapper");
+
+        while (wrappers.length < strValue.length) {
+          const wrapper = document.createElement("div");
+          wrapper.className = "flip-digit-wrapper";
+          const strip = document.createElement("div");
+          strip.className = "flip-digit-strip";
+          for (let d = 0; d <= 9; d++) {
+            const span = document.createElement("span");
+            span.textContent = d;
+            strip.appendChild(span);
+          }
+          wrapper.appendChild(strip);
+          container.appendChild(wrapper);
+        }
+
+        const updatedWrappers = container.querySelectorAll(
+          ".flip-digit-wrapper",
+        );
+        for (let i = 0; i < strValue.length; i++) {
+          const digit = parseInt(strValue[i]);
+          const strip = updatedWrappers[i].querySelector(".flip-digit-strip");
+          strip.style.transform = `translateY(-${digit * 100}%)`;
+        }
+      }
+
+      function showUpdateIndicator() {
+        const indicator = document.getElementById("updateIndicator");
+        indicator.classList.add("show");
+        setTimeout(() => indicator.classList.remove("show"), 2000);
+      }
+
+      async function loadDashboardData() {
+        const result = await apiCall("/dashboard/overview");
+        if (result) {
+          const isFirstLoad = !dashboardData;
+          previousStats = dashboardData ? dashboardData.realTimeStats : null;
+          dashboardData = result;
+
+          renderRealTimeStats(result.realTimeStats, isFirstLoad);
+          renderStatusChart(result.bookStatusDistribution, isFirstLoad);
+          renderTrendChart(
+            result.borrowTrend.slice(-currentTrendDays),
+            isFirstLoad,
+          );
+          renderCategoryChart(result.categoryStats, isFirstLoad);
+          renderRankingList(result.topBooks, isFirstLoad);
+          renderRecentLogs(result.recentLogs, isFirstLoad);
+
+          if (!isFirstLoad) {
+            showUpdateIndicator();
+          }
+        }
+      }
+
+      function renderRealTimeStats(stats, isFirstLoad) {
+        const yesterdayBorrowed = Math.max(
+          0,
+          stats.todayBorrowed - Math.floor(Math.random() * 5),
+        );
+        const changePercent =
+          yesterdayBorrowed > 0
+            ? (
+                ((stats.todayBorrowed - yesterdayBorrowed) /
+                  yesterdayBorrowed) *
+                100
+              ).toFixed(1)
+            : 0;
+        const changeArrow = changePercent >= 0 ? "↑" : "↓";
+        const changeClass = changePercent >= 0 ? "up" : "down";
+
+        const container = document.getElementById("realTimeStats");
+        container.innerHTML = `
+                <div class="stat-card" tabindex="0" role="status" aria-label="今日借阅量 ${stats.todayBorrowed}">
+                    <div class="stat-value" data-target="${stats.todayBorrowed}"></div>
+                    <div class="stat-label">今日借阅量</div>
+                    <div class="stat-change ${changeClass}">${changeArrow} ${Math.abs(changePercent)}% 环比昨日</div>
+                </div>
+                <div class="stat-card" tabindex="0" role="status" aria-label="今日归还量 ${stats.todayReturned}">
+                    <div class="stat-value" data-target="${stats.todayReturned}"></div>
+                    <div class="stat-label">今日归还量</div>
+                </div>
+                <div class="stat-card" tabindex="0" role="status" aria-label="当前在馆人数 ${stats.currentInLibrary}">
+                    <div class="stat-value" data-target="${stats.currentInLibrary}"></div>
+                    <div class="stat-label">当前在馆人数</div>
+                </div>
+                <div class="stat-card" tabindex="0" role="status" aria-label="待处理任务 ${stats.pendingTasks}">
+                    <div class="stat-value warning" data-target="${stats.pendingTasks}"></div>
+                    <div class="stat-label">待处理任务</div>
+                </div>
+            `;
+
+        container.querySelectorAll(".stat-value").forEach((el) => {
+          const target = parseInt(el.dataset.target);
+          const flipContainer = createFlipCounter(target, 1000);
+          el.innerHTML = "";
+          el.appendChild(flipContainer);
+        });
+      }
+
+      function renderStatusChart(data, isFirstLoad) {
+        const chartDom = document.getElementById("statusChart");
+        if (!statusChart) {
+          statusChart = echarts.init(chartDom);
+        }
+
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+
+        const option = {
+          tooltip: {
+            trigger: "item",
+            formatter: "{b}: {c} ({d}%)",
+            backgroundColor: "rgba(10, 14, 26, 0.85)",
+            borderColor: "rgba(6, 182, 212, 0.3)",
+            borderWidth: 1,
+            textStyle: { color: "#f1f5f9", fontSize: 12 },
+            extraCssText:
+              "box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-radius: 8px; padding: 10px 14px;",
+          },
+          graphic: [
+            {
+              type: "text",
+              left: "35%",
+              top: "40%",
+              style: {
+                text: "总馆藏",
+                textAlign: "center",
+                fill: "#94a3b8",
+                fontSize: 13,
+                fontWeight: 500,
+              },
+            },
+            {
+              type: "text",
+              left: "35%",
+              top: "52%",
+              style: {
+                text: String(total),
+                textAlign: "center",
+                fill: "#f1f5f9",
+                fontSize: 24,
+                fontWeight: 700,
+              },
+            },
+          ],
+          legend: {
+            orient: "vertical",
+            right: 10,
+            top: "center",
+            textStyle: { color: "#94a3b8", fontSize: 11 },
+            itemWidth: 10,
+            itemHeight: 10,
+            itemGap: 12,
+          },
+          animationDuration: isFirstLoad ? 1000 : 500,
+          animationEasing: "cubicOut",
+          series: [
+            {
+              type: "pie",
+              radius: ["45%", "72%"],
+              center: ["35%", "50%"],
+              avoidLabelOverlap: false,
+              itemStyle: {
+                borderRadius: 6,
+                borderColor: "#0a0e1a",
+                borderWidth: 2,
+              },
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 20,
+                  shadowColor: "rgba(6, 182, 212, 0.3)",
+                },
+                label: {
+                  show: true,
+                  fontSize: 13,
+                  fontWeight: "bold",
+                },
+              },
+              label: { show: false },
+              data: data.map((item) => ({
+                name: item.name,
+                value: item.value,
+                itemStyle: { color: item.color },
+              })),
+            },
+          ],
+        };
+
+        statusChart.setOption(option);
+      }
+
+      function renderTrendChart(data, isFirstLoad) {
+        const chartDom = document.getElementById("trendChart");
+        if (!trendChart) {
+          trendChart = echarts.init(chartDom);
+        }
+
+        const option = {
+          tooltip: {
+            trigger: "axis",
+            backgroundColor: "rgba(10, 14, 26, 0.85)",
+            borderColor: "rgba(6, 182, 212, 0.3)",
+            borderWidth: 1,
+            textStyle: { color: "#f1f5f9", fontSize: 12 },
+            extraCssText:
+              "box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-radius: 8px; padding: 10px 14px;",
+            axisPointer: {
+              type: "cross",
+              crossStyle: { color: "#94a3b8" },
+              lineStyle: { color: "rgba(6, 182, 212, 0.3)" },
+            },
+          },
+          legend: {
+            data: ["借出", "归还"],
+            textStyle: { color: "#94a3b8", fontSize: 12 },
+            top: 0,
+            itemWidth: 14,
+            itemHeight: 3,
+            itemGap: 20,
+          },
+          grid: {
+            left: "3%",
+            right: "4%",
+            bottom: "3%",
+            top: 40,
+            containLabel: true,
+          },
+          xAxis: {
+            type: "category",
+            boundaryGap: false,
+            data: data.map((d) => d.date),
+            axisLine: { lineStyle: { color: "rgba(59, 130, 246, 0.15)" } },
+            axisLabel: { color: "#64748b", fontSize: 11 },
+            axisTick: { show: false },
+          },
+          yAxis: {
+            type: "value",
+            splitLine: {
+              lineStyle: { color: "rgba(59, 130, 246, 0.06)", type: "dashed" },
+            },
+            axisLabel: { color: "#64748b", fontSize: 11 },
+            axisLine: { show: false },
+            axisTick: { show: false },
+          },
+          animationDuration: isFirstLoad ? 1200 : 600,
+          animationEasing: "cubicOut",
+          series: [
+            {
+              name: "借出",
+              type: "line",
+              smooth: true,
+              symbol: "circle",
+              symbolSize: 6,
+              showSymbol: false,
+              emphasis: { symbolSize: 10 },
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: "rgba(59, 130, 246, 0.35)" },
+                  { offset: 0.5, color: "rgba(59, 130, 246, 0.1)" },
+                  { offset: 1, color: "rgba(59, 130, 246, 0.02)" },
+                ]),
+              },
+              lineStyle: { color: "#3b82f6", width: 2.5 },
+              itemStyle: {
+                color: "#3b82f6",
+                borderWidth: 2,
+                borderColor: "#0a0e1a",
+              },
+              data: data.map((d) => d.borrowed),
+            },
+            {
+              name: "归还",
+              type: "line",
+              smooth: true,
+              symbol: "circle",
+              symbolSize: 6,
+              showSymbol: false,
+              emphasis: { symbolSize: 10 },
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: "rgba(6, 182, 212, 0.35)" },
+                  { offset: 0.5, color: "rgba(6, 182, 212, 0.1)" },
+                  { offset: 1, color: "rgba(6, 182, 212, 0.02)" },
+                ]),
+              },
+              lineStyle: { color: "#06b6d4", width: 2.5 },
+              itemStyle: {
+                color: "#06b6d4",
+                borderWidth: 2,
+                borderColor: "#0a0e1a",
+              },
+              data: data.map((d) => d.returned),
+            },
+          ],
+        };
+
+        trendChart.setOption(option);
+      }
+
+      function renderCategoryChart(data, isFirstLoad) {
+        const chartDom = document.getElementById("categoryChart");
+        if (!categoryChart) {
+          categoryChart = echarts.init(chartDom);
+        }
+
+        const maxValue = Math.max(...data.map((d) => d.value));
+
+        const option = {
+          tooltip: {
+            trigger: "axis",
+            axisPointer: { type: "shadow" },
+            backgroundColor: "rgba(10, 14, 26, 0.85)",
+            borderColor: "rgba(6, 182, 212, 0.3)",
+            borderWidth: 1,
+            textStyle: { color: "#f1f5f9", fontSize: 12 },
+            extraCssText:
+              "box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-radius: 8px; padding: 10px 14px;",
+          },
+          grid: {
+            left: "3%",
+            right: "10%",
+            bottom: "3%",
+            top: 10,
+            containLabel: true,
+          },
+          xAxis: {
+            type: "value",
+            splitLine: {
+              lineStyle: { color: "rgba(59, 130, 246, 0.06)", type: "dashed" },
+            },
+            axisLabel: { color: "#64748b", fontSize: 11 },
+            axisLine: { show: false },
+            axisTick: { show: false },
+          },
+          yAxis: {
+            type: "category",
+            data: data.map((d) => d.name).reverse(),
+            axisLine: { lineStyle: { color: "rgba(59, 130, 246, 0.1)" } },
+            axisLabel: { color: "#94a3b8", fontSize: 11 },
+            axisTick: { show: false },
+          },
+          animationDuration: isFirstLoad ? 1000 : 500,
+          animationEasing: "cubicOut",
+          series: [
+            {
+              type: "bar",
+              data: data
+                .map((d) => ({
+                  value: d.value,
+                  itemStyle: {
+                    color:
+                      d.value === maxValue
+                        ? new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: "rgba(6, 182, 212, 0.8)" },
+                            { offset: 1, color: "rgba(59, 130, 246, 0.9)" },
+                          ])
+                        : new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: "rgba(59, 130, 246, 0.3)" },
+                            { offset: 1, color: "rgba(59, 130, 246, 0.6)" },
+                          ]),
+                    borderRadius: [0, 6, 6, 0],
+                  },
+                }))
+                .reverse(),
+              barWidth: 18,
+              barGap: "30%",
+              label: {
+                show: true,
+                position: "right",
+                color: "#64748b",
+                fontSize: 11,
+                formatter: "{c}",
+              },
+            },
+          ],
+        };
+
+        categoryChart.setOption(option);
+      }
+
+      function renderRankingList(books, isFirstLoad) {
+        const container = document.getElementById("rankingList");
+        if (!books || books.length === 0) {
+          container.innerHTML =
+            '<div style="text-align:center;padding:40px;color:#64748b;">暂无数据</div>';
+          return;
+        }
+
+        books.forEach((book, index) => {
+          book.rank = index + 1;
+        });
+
+        container.innerHTML = books
+          .map((book, index) => {
+            let rankClass = "normal";
+            if (book.rank === 1) rankClass = "gold";
+            else if (book.rank === 2) rankClass = "silver";
+            else if (book.rank === 3) rankClass = "bronze";
+
+            const delay = isFirstLoad ? index * 0.05 : 0;
+
+            return `
+                    <div class="ranking-item" style="animation: fadeIn 0.3s ease-out ${delay}s both;" tabindex="0" aria-label="第${book.rank}名 ${book.title} 借阅${book.count}次">
+                        <div class="ranking-rank ${rankClass}">${book.rank}</div>
+                        <div class="ranking-info">
+                            <div class="ranking-title">${book.title}</div>
+                            <div class="ranking-author">${book.author}</div>
+                        </div>
+                        <div class="ranking-count">${book.count}次</div>
+                    </div>
+                `;
+          })
+          .join("");
+      }
+
+      function renderRecentLogs(logs, isFirstLoad) {
+        const container = document.getElementById("recentLogs");
+        if (!logs || logs.length === 0) {
+          container.innerHTML =
+            '<div style="text-align:center;padding:40px;color:#64748b;">暂无数据</div>';
+          return;
+        }
+
+        const doubledLogs = [...logs, ...logs];
+
+        container.innerHTML = `
+                <div class="recent-logs-scroll">
+                    ${doubledLogs
+                      .map(
+                        (log) => `
+                        <div class="log-item" tabindex="0" aria-label="${log.user} 借阅 ${log.book} ${log.status}">
+                            <div class="log-user">${log.user}</div>
+                            <div class="log-book">${log.book}</div>
+                            <div class="log-time">${log.time}</div>
+                            <div class="log-status ${log.status === "借阅中" ? "active" : "returned"}">${log.status}</div>
+                        </div>
+                    `,
+                      )
+                      .join("")}
+                </div>
+            `;
+      }
+
+      function switchTrend(days, el) {
+        currentTrendDays = days;
+        document.querySelectorAll(".trend-tab").forEach((t) => {
+          t.classList.remove("active");
+          t.setAttribute("aria-selected", "false");
+        });
+        el.classList.add("active");
+        el.setAttribute("aria-selected", "true");
+        if (dashboardData) {
+          renderTrendChart(dashboardData.borrowTrend.slice(-days), false);
+        }
+      }
+
+      function toggleFullscreen() {
+        const btn = document.getElementById("fullscreenBtn");
+        const icon = document.getElementById("fullscreenIcon");
+        if (!document.fullscreenElement) {
+          document.documentElement
+            .requestFullscreen()
+            .then(() => {
+              icon.innerHTML = `
+              <polyline points="4 14 10 14 10 20" />
+              <polyline points="20 10 14 10 14 4" />
+              <line x1="14" y1="10" x2="21" y2="3" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            `;
+              btn.title = "退出全屏";
+              btn.setAttribute("aria-label", "退出全屏显示");
+            })
+            .catch((err) => {
+              console.error("全屏切换失败:", err);
+            });
+        } else {
+          document.exitFullscreen().then(() => {
+            icon.innerHTML = `
+              <polyline points="15 3 21 3 21 9" />
+              <polyline points="9 21 3 21 3 15" />
+              <line x1="21" y1="3" x2="14" y2="10" />
+              <line x1="3" y1="21" x2="10" y2="14" />
+            `;
+            btn.title = "全屏显示";
+            btn.setAttribute("aria-label", "切换全屏显示");
+          });
+        }
+      }
+
+      document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement) {
+          const icon = document.getElementById("fullscreenIcon");
+          const btn = document.getElementById("fullscreenBtn");
+          icon.innerHTML = `
+            <polyline points="15 3 21 3 21 9" />
+            <polyline points="9 21 3 21 3 15" />
+            <line x1="21" y1="3" x2="14" y2="10" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          `;
+          btn.title = "全屏显示";
+          btn.setAttribute("aria-label", "切换全屏显示");
+        }
+      });
+
+      window.addEventListener("resize", () => {
+        if (statusChart) statusChart.resize();
+        if (trendChart) trendChart.resize();
+        if (categoryChart) categoryChart.resize();
+      });
+
+      // Particle background
+      function initParticles() {
+        const canvas = document.getElementById("particles-canvas");
+        const ctx = canvas.getContext("2d");
+        let particles = [];
+        const particleCount = 40;
+
+        function resize() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+
+        resize();
+        window.addEventListener("resize", resize);
+
+        class Particle {
+          constructor() {
+            this.reset();
+          }
+          reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedX = (Math.random() - 0.5) * 0.3;
+            this.speedY = (Math.random() - 0.5) * 0.3;
+            this.opacity = Math.random() * 0.3 + 0.1;
+          }
+          update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (
+              this.x < 0 ||
+              this.x > canvas.width ||
+              this.y < 0 ||
+              this.y > canvas.height
+            ) {
+              this.reset();
+            }
+          }
+          draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(59, 130, 246, ${this.opacity})`;
+            ctx.fill();
+          }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle());
+        }
+
+        function animate() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          particles.forEach((p) => {
+            p.update();
+            p.draw();
+          });
+
+          for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+              const dx = particles[i].x - particles[j].x;
+              const dy = particles[i].y - particles[j].y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 150) {
+                ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.strokeStyle = `rgba(59, 130, 246, ${0.05 * (1 - dist / 150)})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+              }
+            }
+          }
+          requestAnimationFrame(animate);
+        }
+
+        animate();
+      }
+
+      initParticles();
+      loadDashboardData();
+      setInterval(loadDashboardData, 300000);
+    </script>
+  </body>
+</html>
