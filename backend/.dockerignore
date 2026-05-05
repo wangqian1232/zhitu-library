@@ -1,0 +1,7 @@
+target/
+*.jar
+.git/
+.gitignore
+*.md
+koyeb.yaml
+render.yaml

@@ -1,0 +1,21 @@
+app:
+  name: zhitu-library
+  type: web
+  git:
+    repository: wangqian1232/zhitu-library
+    branch: main
+  routes:
+    - path: /
+      port: 8080
+  regions:
+    - was
+  env:
+    - key: DB_URL
+      value: jdbc:mysql://gateway01.ap-southeast-1.prod.alicloud.tidbcloud.com:4000/library_db?useSSL=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    - key: DB_USERNAME
+      value: eYdN2hyLmcGuGdk.root
+    - key: DB_PASSWORD
+      value: tE9LmlZRynQEAMpg
+  build:
+    type: dockerfile
+    dockerfile: backend/Dockerfile
